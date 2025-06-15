@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trader Performance Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.1/socket.io.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='traders.css') }}">
+</head>
+<body>
+    <div class="trader-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Traders</h2>
+                <div id="connectionStatus" class="status-indicator">●</div>
+            </div>
+            <div class="controls">
+                <input type="text" id="searchInput" placeholder="Search by Trader ID...">
+                <select id="sortSelect">
+                    <option value="pnl">Sort by P/L</option>
+                    <option value="portfolio_value">Sort by Portfolio Value</option>
+                    <option value="total_volume_traded">Sort by Volume</option>
+                    <option value="cash">Sort by Cash</option>
+                    <option value="shares">Sort by Shares</option>
+                </select>
+            </div>
+            <ul id="traderList" class="trader-list">
+                <!-- Trader list items will be injected by JS -->
+            </ul>
+        </div>
+        <div class="main-content">
+            <div id="welcomeMessage">
+                <h1>Trader Performance</h1>
+                <p>Select a trader from the list on the left to view their detailed performance, open positions, and trade history.</p>
+            </div>
+            <div id="traderDetails" class="hidden">
+                <h2 id="traderIdHeader"></h2>
+
+                <h3>Portfolio Overview</h3>
+                <div class="portfolio-grid">
+                    <div class="metric-card">
+                        <span class="label">Portfolio Value</span>
+                        <span id="detailPortfolioValue" class="value"></span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="label">Profit / Loss</span>
+                        <span id="detailPnl" class="value"></span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="label">Cash</span>
+                        <span id="detailCash" class="value"></span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="label">Shares</span>
+                        <span id="detailShares" class="value"></span>
+                    </div>
+                </div>
+
+                <h3>Open Orders</h3>
+                <div class="table-container">
+                    <table id="openOrdersTable">
+                        <thead>
+                            <tr>
+                                <th>Side</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <h3>Trade History</h3>
+                 <div class="table-container">
+                    <table id="tradeHistoryTable">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Side</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='traders.js') }}"></script>
+</body>
+</html>

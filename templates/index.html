@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Stock Market Simulation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.1/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Flask Stock Market Simulation</h1>
+            <div class="status-indicator" id="connectionStatus">●</div>
+        </div>
+
+        <div class="controls">
+            <button id="startBtn">Start Simulation</button>
+            <button id="stopBtn" disabled>Stop</button>
+            <button id="resetBtn">Reset</button>
+            <a href="/traders" target="_blank" class="trader-link-button">View Traders</a>
+        </div>
+
+        <div class="dashboard">
+            <div class="chart-container">
+                <canvas id="priceChart"></canvas>
+            </div>
+
+            <div class="info-panel">
+                <div class="metric">
+                    <span>Current Price:</span>
+                    <span id="currentPrice" class="price">$ --.--</span>
+                </div>
+                <div class="metric">
+                    <span>Change:</span>
+                    <span id="priceChange">$0.00 (0.00%)</span>
+                </div>
+                <div class="metric">
+                    <span>Volume:</span>
+                    <span id="volume">0</span>
+                </div>
+                <div class="metric">
+                    <span>Bid:</span>
+                    <span id="bestBid" class="bid">-</span>
+                </div>
+                <div class="metric">
+                    <span>Ask:</span>
+                    <span id="bestAsk" class="ask">-</span>
+                </div>
+                <div class="metric">
+                    <span>Spread:</span>
+                    <span id="spread">-</span>
+                </div>
+                <div class="metric">
+                    <span>Active Traders:</span>
+                    <span id="activeTraders">1000</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="order-book">
+            <h3>Order Book</h3>
+            <table class="order-table">
+                <thead>
+                    <tr>
+                        <th>Bid Size</th>
+                        <th>Bid Price</th>
+                        <th>Ask Price</th>
+                        <th>Ask Size</th>
+                    </tr>
+                </thead>
+                <tbody id="orderBookBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="trades-section">
+            <h3>Recent Trades</h3>
+            <div id="recentTrades" class="recent-trades">
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
