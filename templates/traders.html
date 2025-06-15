@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trader Performance Dashboard</title>
+    <!-- The Chart.js library is required for the new chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.1/socket.io.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='traders.css') }}">
@@ -57,6 +59,16 @@
                     </div>
                 </div>
 
+                <h3>Performance History</h3>
+                <div class="chart-controls">
+                    <button id="chartModePortfolio" class="chart-mode-btn active">Portfolio Value</button>
+                    <button id="chartModeStock" class="chart-mode-btn">Stock Value</button>
+                    <button id="chartModeCash" class="chart-mode-btn">Cash</button>
+                </div>
+                <div class="chart-container-small">
+                    <canvas id="traderHistoryChart"></canvas>
+                </div>
+
                 <h3>Open Orders</h3>
                 <div class="table-container">
                     <table id="openOrdersTable">
@@ -88,6 +100,7 @@
             </div>
         </div>
     </div>
+    <!-- This script powers the entire page -->
     <script src="{{ url_for('static', filename='traders.js') }}"></script>
 </body>
 </html>

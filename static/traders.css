@@ -162,3 +162,39 @@
 .pnl-negative, .sell-side {
     color: #ef4444;
 }
+
+.chart-container-small {
+    position: relative;
+    height: 250px; /* Adjust height as needed */
+    width: 100%;
+    background: #1a1a1a;
+    padding: 15px;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.chart-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.chart-mode-btn {
+    background: #333;
+    border: 1px solid #444;
+    color: #ccc;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.chart-mode-btn:hover {
+    background: #444;
+}
+
+.chart-mode-btn.active {
+    background: #1e40af;
+    color: #fff;
+    border-color: #1e40af;
+}
