@@ -88,13 +88,32 @@ class RandomTrader(Trader):
 
             # Mix of limit and market orders
             order_type = random.choices(['limit', 'market'], weights=[0.8, 0.2])[0]
-            quantity = random.randint(1, 50)  # Smaller order sizes
 
-            # Check if trader has resources
-            if side == 'buy' and self.cash < current_price * quantity:
+            max_quantity = 0
+            # Determine max quantity based on resources
+            if side == 'buy':
+                max_quantity = int(self.cash // current_price)
+            elif side == 'sell':
+                max_quantity = self.shares
+
+            if max_quantity < 1:
                 return None
-            if side == 'sell' and self.shares < quantity:
-                return None
+
+            # Most of the time, use smaller order sizes but occasionally larger ones for variety
+            # Change max quantity based on trader's resources
+            if max_quantity == 1:
+                quantity = 1
+            else:
+                if random.random() < 0.8:
+                    quantity = random.randint(1, min(50, int(max_quantity * 0.9)))
+                elif random.random() < 0.5 and int(max_quantity * 0.6) > 50:
+                    quantity = random.randint(50, min(200, int(max_quantity * 0.6)))
+                elif random.random() < 0.1 and int(max_quantity * 0.3) > 200:
+                    quantity = random.randint(200, min(500, int(max_quantity * 0.3)))
+                elif int(max_quantity * 0.5) >= 1:
+                    quantity = random.randint(1, int(max_quantity * 0.5))
+
+            # No need to check resources again, as quantity is always valid
 
             price = None
             if order_type == 'limit':

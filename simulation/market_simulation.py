@@ -3,7 +3,9 @@ from collections import deque
 
 from simulation.event_scheduler import EventScheduler
 from simulation.order_book import OrderBook
+from simulation.traders.mean_reverting_trader import MeanRevertingTrader
 from simulation.traders.random_trader import RandomTrader
+from simulation.traders.trend_following_trader import TrendFollowingTrader
 
 
 class MarketSimulation:
@@ -15,6 +17,7 @@ class MarketSimulation:
         self.order_book = OrderBook()
         self.traders = []
         self.trader_map = {}
+        self.tracked_trader_ids = set()  # Holds IDs of traders to be monitored
         self.price_history = deque([self.current_price], maxlen=1000)
         self.volume_history = deque([0], maxlen=1000)
         self.running = False
@@ -44,7 +47,6 @@ class MarketSimulation:
                     self.trader_map[trader_id] = trader
 
             if self.config.mean_reverting_traders > 0:
-                from simulation.traders.mean_reverting_trader import MeanRevertingTrader
                 for i in range(self.config.mean_reverting_traders):
                     trader_id = f"mrt_{i}"
                     trader = MeanRevertingTrader(
@@ -55,11 +57,82 @@ class MarketSimulation:
                     )
                     self.traders.append(trader)
                     self.trader_map[trader_id] = trader
+
+            if hasattr(self.config, 'trend_following_traders') and self.config.trend_following_traders > 0:
+                for i in range(self.config.trend_following_traders):
+                    trader_id = f"tft_{i}"
+                    trader = TrendFollowingTrader(
+                        trader_id,
+                        self.config.trend_following_trader_cash,
+                        random.randint(0, self.config.trend_following_trader_shares)
+                    )
+                    self.traders.append(trader)
+                    self.trader_map[trader_id] = trader
         else:
             for i in range(100):
-                trader = RandomTrader(i, 50000, random.randint(0, 1000), fair_value=self.current_price)
+                trader = RandomTrader(f"rt_{i}", 50000, random.randint(0, 1000), fair_value=self.current_price)
                 self.traders.append(trader)
-                self.trader_map[i] = trader
+                self.trader_map[f"rt_{i}"] = trader
+
+        self._determine_tracked_traders()
+
+    def _determine_tracked_traders(self):
+        """
+        Populates `self.tracked_trader_ids` based on the tracking configuration.
+        This method allows selective tracking of traders to reduce data sent to the frontend.
+        """
+        self.tracked_trader_ids = set()
+        if not self.config:
+            # Fallback: track the first 10 traders if no config is provided
+            for trader in self.traders[:10]:
+                self.tracked_trader_ids.add(trader.id)
+            return
+
+        # Map trader class names to their configuration keys for easy extension
+        type_map = {
+            'RandomTrader': {
+                'prefix': 'rt_',
+                'count_key': 'random_trader_tracking',
+            },
+            'MeanRevertingTrader': {
+                'prefix': 'mrt_',
+                'count_key': 'mean_reverting_trader_tracking',
+            },
+            'TrendFollowingTrader': {
+                'prefix': 'tft_',
+                'count_key': 'trend_following_trader_tracking',
+            }
+        }
+
+        global_count = getattr(self.config, 'all_traders_tracking', 0) or 0
+
+        # Group traders by their class name for efficient lookup
+        traders_by_type = {}
+        for trader in self.traders:
+            type_name = trader.__class__.__name__
+            if type_name not in traders_by_type:
+                traders_by_type[type_name] = []
+            traders_by_type[type_name].append(trader)
+
+        for type_name, type_config in type_map.items():
+            if type_name not in traders_by_type:
+                continue
+
+            specific_count = getattr(self.config, type_config['count_key'], 0) or 0
+            total_count = global_count + specific_count
+
+            if total_count > 0:
+                # Priority 1: Track by count (global + specific). This overrides name-based tracking.
+                traders_of_this_type = traders_by_type[type_name]
+                for i in range(min(total_count, len(traders_of_this_type))):
+                    self.tracked_trader_ids.add(traders_of_this_type[i].id)
+            else:
+                # Priority 2: Track by specific IDs if count is not used for this type.
+                if hasattr(self.config, 'tracked_trader_ids_by_name'):
+                    prefix = type_config['prefix']
+                    for trader_id in self.config.tracked_trader_ids_by_name:
+                        if str(trader_id).startswith(prefix) and trader_id in self.trader_map:
+                            self.tracked_trader_ids.add(trader_id)
 
     def step(self):
         total_volume = 0
@@ -121,7 +194,12 @@ class MarketSimulation:
     def get_all_traders_data(self):
         trader_data = []
         all_open_orders = self.order_book.bids + self.order_book.asks
-        for trader in self.traders:
+        # Iterate over the pre-determined set of tracked trader IDs for efficiency
+        for trader_id in sorted(list(self.tracked_trader_ids)):
+            trader = self.trader_map.get(trader_id)
+            if not trader:
+                continue
+
             trader_open_orders = [
                 {'type': o.side, 'price': o.price, 'quantity': o.quantity}
                 for o in all_open_orders if o.trader_id == trader.id
